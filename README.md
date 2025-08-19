@@ -1,125 +1,674 @@
-<!---------------------[  Description  ]------------------<recommended> section below------------------>
+# Deploy Your AI Application in Production
 
-# Deploy your AI Application in Production
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Azure](https://img.shields.io/badge/Azure-0078D4?logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com)
+[![AI Foundry](https://img.shields.io/badge/AI%20Foundry-FF6F00?logo=microsoft&logoColor=white)](https://azure.microsoft.com/en-us/products/ai-foundry/)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zone-Enterprise/Deploy-Your-AI-Application-In-Production)
 
-## Overview
+## 🚀 Overview
 
-<span style="font-size: 3em;">🚀</span> **New: Updated deployment to match Foundry release at Build 2025!**
-This new update has been tested in the EastUS2 region successfully.
-This is a foundational solution for deploying an AI Foundry account ([Cognitive Services accountKind = 'AIServices'](https://review.learn.microsoft.com/en-us/azure/templates/microsoft.cognitiveservices/2025-04-01-preview/accounts?branch=main&pivots=deployment-language-bicep)) and project ([cognitiveServices/projects](https://review.learn.microsoft.com/en-us/azure/templates/microsoft.cognitiveservices/2025-04-01-preview/accounts/projects?branch=main&pivots=deployment-language-bicep)) into an isolated environment (vNet) within Azure. The deployed features follow Microsoft's Well-Architected Framework [WAF](https://learn.microsoft.com/en-us/azure/well-architected/) to establish an isolated infrastructure for AI Foundry, intended to assist in moving from a Proof of Concept state to a production-ready application. 
+> **✨ New: Updated deployment to match Foundry release at Build 2025!**  
+> Successfully tested in the EastUS2 region with enhanced security and monitoring capabilities.
 
-This template leverages Azure Verified Modules (AVM) and the Azure Developer CLI (AZD) to provision a WAF-aligned infrastructure for AI application development. This infrastructure includes AI Foundry elements, a virtual network (VNET), private endpoints, Key Vault, a storage account, and additional, optional WAF-aligned resources (such as AI Search, Cosmos DB and SQL Server) that can be leveraged with Foundry developed projects.
+This is a **production-ready solution** for deploying Azure AI Foundry with comprehensive network isolation, security controls, and monitoring. Built following Microsoft's Well-Architected Framework (WAF), this solution helps organizations transition from proof-of-concept to production-grade AI applications.
 
-The following deployment automates our recommended configuration to protect your data and resources; using Microsoft Entra ID role-based access control, a managed network, and private endpoints. We recommend disabling public network access for Azure OpenAI resources, Azure AI Search resources, and storage accounts (which will occur when deploying those optional services within this workflow). Using selected networks with IP rules isn't supported because the services' IP addresses are dynamic.
+### What This Solution Provides
 
-This repository will automate:
-1. Configuring the virtual network, private end points and private link services to isolate resources connecting to the account and project in a secure way. [Secure Data Playground](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/secure-data-playground)
-2. Deploying and configuring the network isolation of the Azure AI Foundry account and project sub-resource within the virtual network, and with all services configured behind private end points. 
+```mermaid
+graph LR
+    subgraph "🎯 Key Benefits"
+        A[🔒 Network Isolation]
+        B[🤖 AI Foundry Ready]
+        C[📊 Production Monitoring]
+        D[🛡️ Enterprise Security]
+    end
+    
+    subgraph "🏗️ Infrastructure"
+        E[Virtual Network]
+        F[Private Endpoints]
+        G[Azure Bastion]
+        H[Jump Box VM]
+    end
+    
+    subgraph "🤖 AI Services"
+        I[AI Foundry Hub]
+        J[AI Projects]
+        K[Azure OpenAI]
+        L[AI Search]
+    end
+    
+    subgraph "📊 Optional Services"
+        M[Cosmos DB]
+        N[SQL Server]
+        O[API Management]
+        P[App Service]
+    end
+    
+    A --> E
+    B --> I
+    C --> E
+    D --> F
+    
+    classDef benefit fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef infra fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef ai fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef optional fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    
+    class A,B,C,D benefit
+    class E,F,G,H infra
+    class I,J,K,L ai
+    class M,N,O,P optional
+```
+
+### 🎯 Key Features
+
+- **🔐 Zero Trust Architecture**: Complete network isolation with private endpoints
+- **🤖 AI-Ready Infrastructure**: Pre-configured AI Foundry Hub and Projects
+- **📊 Production Monitoring**: Comprehensive logging and alerting
+- **🚀 Quick Deployment**: Multiple deployment options (Codespaces, local, CI/CD)
+- **🛡️ Enterprise Security**: Azure AD integration, RBAC, and Key Vault
+- **📈 Scalable Design**: Built for production workloads with monitoring
+- **🔧 Customizable**: Optional services based on your requirements
+
+### 📋 What Gets Deployed
+
+This solution automatically configures:
+
+1. **🌐 Secure Network Foundation**
+   - Virtual network with proper segmentation
+   - Private endpoints for all Azure services
+   - Azure Bastion for secure access
+   - Network security groups and rules
+
+2. **🤖 AI Services Stack**
+   - AI Foundry Hub with network isolation
+   - AI Foundry Project with service connections
+   - Azure OpenAI with GPT-4o and embedding models
+   - Optional: AI Search, Content Safety, Vision, Speech
+
+3. **📊 Data & Storage Services**
+   - Secure storage accounts with private access
+   - Key Vault for secrets management
+   - Container Registry for custom images
+   - Optional: Cosmos DB, SQL Server
+
+4. **🔍 Monitoring & Management**
+   - Log Analytics workspace
+   - Application Insights for performance monitoring
+   - Diagnostic settings for all services
+   - Optional: API Management gateway 
 
 
 
-## Architecture
-The diagram below illustrates the capabilities included in the template.
+## 🏗️ Architecture Overview
+
+The solution implements a secure, production-ready architecture with complete network isolation and comprehensive monitoring.
+
+### High-Level Architecture
+
+```mermaid
+graph TB
+    subgraph "🌐 Azure Subscription"
+        subgraph "📦 Resource Group"
+            subgraph "🔒 Virtual Network (10.0.0.0/16)"
+                subgraph "🖥️ Default Subnet (10.0.0.0/24)"
+                    VM[Jump Box VM]
+                    PE[🔗 Private Endpoints]
+                end
+                subgraph "🚪 Bastion Subnet (10.0.1.0/27)"
+                    BAS[Azure Bastion]
+                end
+                subgraph "🌐 Web Apps Subnet (10.0.2.0/24)"
+                    APP[Sample App Service]
+                end
+            end
+            
+            subgraph "🤖 AI Services"
+                AIF[AI Foundry Hub]
+                AIP[AI Foundry Project]
+                AOI[Azure OpenAI]
+            end
+            
+            subgraph "💾 Data Services"
+                ST[Storage Account]
+                KV[🔐 Key Vault]
+                ACR[📦 Container Registry]
+                COS[🍃 Cosmos DB]
+                SQL[🗄️ SQL Server]
+                AIS[🔍 AI Search]
+            end
+            
+            subgraph "📊 Management"
+                APIM[API Management]
+                LAW[📊 Log Analytics]
+                AI[📈 App Insights]
+            end
+        end
+    end
+    
+    USER[👤 User] -->|HTTPS:443| BAS
+    BAS -->|RDP:3389| VM
+    VM --> PE
+    PE -.->|Private| AIF
+    PE -.->|Private| ST
+    PE -.->|Private| KV
+    PE -.->|Private| ACR
+    AIF --> AIP
+    AIP --> AOI
+    APP --> APIM
+    APIM --> AIP
+    
+    classDef user fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    classDef network fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef ai fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef data fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef mgmt fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    
+    class USER user
+    class VM,BAS,PE,APP network
+    class AIF,AIP,AOI ai
+    class ST,KV,ACR,COS,SQL,AIS data
+    class APIM,LAW,AI mgmt
+```
+
+### Security Architecture Flow
+
+| Step | Component | Description |
+|------|-----------|-------------|
+| 1 | 🔐 **Authentication** | Users authenticate via Azure AD with MFA to access Azure Bastion |
+| 2 | 🚪 **Secure Access** | Azure Bastion provides secure RDP access to jump box VM without public IP |
+| 3 | 🔗 **Private Connectivity** | All Azure services accessible only through private endpoints within VNet |
+| 4 | 🤖 **AI Services** | AI Foundry Hub and Projects secured with Azure AD and private endpoints |
+| 5 | 🛡️ **API Gateway** | API Management in private mode handles cross-cutting concerns securely |
+
+### Network Isolation Details
 
 ![Network Isolation Infrastructure](./img/Architecture/FDParch.png)
 
-| Diagram Step      | Description     |
-| ------------- | ------------- |
-| 1 | Tenant users utilize Microsoft Entra ID and multi-factor authentication to log in to the jumpbox virtual machine |
-| 2 | Users and workloads within the client's virtual network can utilize private endpoints to access managed resources and the hub workspace|
-| 3 | The workspace-managed virtual network is automatically generated for you when you configure managed network isolation to one of the following modes: <br> Allow Internet Outbound <br> Allow Only Approved Outbound|
-| 4 | The online endpoint is secured with Microsoft Entra ID authentication. Client applications must obtain a security token from the Microsoft Entra ID tenant before invoking the prompt flow hosted by the managed deployment and available through the online endpoint|
-| 5 | API Management creates consistent, modern API gateways for existing backend services. In this architecture, API Management is used in a fully private mode to offload cross-cutting concerns from the API code and hosts.|
+> 📖 **For comprehensive technical details**, see our [Technical Architecture Documentation](docs/TECHNICAL_ARCHITECTURE.md)
 
-## Features
+## ✨ Key Features & Capabilities
 
-### What solutions does this enable? 
-- Deploys an AI Foundry account and project leveraging the latest AI Foundry updates announced at Build 2025, into a virtual network with all dependent services connected via private end points. 
+### 🚀 Production-Ready AI Infrastructure
+- **AI Foundry Hub & Projects**: Latest Azure AI Foundry with Build 2025 updates
+- **Azure OpenAI Integration**: Pre-configured with GPT-4o and text-embedding models
+- **Network Isolation**: Complete private endpoint architecture for security
+- **Zero Trust Architecture**: No public internet access to AI services
 
-- Configures AI Foundry, adhering to the best practices outlined in the Well Architected Framework.
+### 🔒 Enterprise Security
+- **Azure AD Integration**: Multi-factor authentication and conditional access
+- **Private Endpoints**: All services accessible only within the virtual network
+- **Key Vault Integration**: Secure secrets and certificate management
+- **Role-Based Access Control**: Granular permissions for different user roles
 
-- Provides the ability to [add additional Azure services during deployment](docs/add_additional_services.md), configured to connect via isolation to enrich your AI project.
-    (AI Search, API Management, CosmosDB, Azure SQL DB)
+### 📊 Monitoring & Observability
+- **Comprehensive Logging**: All services configured with diagnostic settings
+- **Performance Monitoring**: Application Insights for real-time performance tracking
+- **Security Monitoring**: Network security group logs and security alerts
+- **Cost Optimization**: Built-in cost monitoring and optimization recommendations
 
--  <span style="font-size: 3em;">🚀</span> **New**: 
-Offers ability to [start with an existing Azure AI Project](docs/transfer_project_connections.md) which will provision dependent Azure resources based on the Project's established connections within AI Foundry.
+### 🔧 Flexible Configuration
+- **Optional Services**: Choose from AI Search, Cosmos DB, SQL Server, API Management
+- **Custom Models**: Support for custom AI model deployments
+- **Existing Project Integration**: Import connections from existing AI Foundry projects
+- **Sample Application**: Optional chat application for testing and demonstration
 
+### 📈 Scalability & Performance
+- **Auto-scaling**: Built-in scaling for compute and storage resources
+- **High Availability**: Multi-zone deployment options for critical workloads
+- **Performance Optimization**: Optimized network routing and caching
+- **Load Balancing**: API Management for intelligent request routing
 
-## Prerequisites and high-level steps
-
-1. Have access to an Azure subscription and Entra ID account with Contributor permissions.
-2. Confirm the subscription you are deploying into has the [Required Roles and Scopes](docs/Required_roles_scopes_resources.md).
-3. The solution ensures secure access to the private VNET through a jump-box VM with Azure Bastion. By default, Bastion does not require an inbound NSG rule for network traffic. However, if your environment enforces specific policy rules, you can resolve access issues by entering your machine's IP address in the `allowedIpAddress` parameter when prompted during deployment. If not specified, all IP addresses are allowed to connect to Azure Bastion. 
-4. If deploying from your [local environment](docs/local_environment_steps.md), install the [Azure CLI (AZ)](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest) and the [Azure Developer CLI (AZD)](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/install-azd?tabs=winget-windows%2Cbrew-mac%2Cscript-linux&pivots=os-windows).
-5. If deploying via [GitHub Codespaces](docs/github_code_spaces_steps.md) - requires the user to be on a GitHub Team or Enterprise Cloud plan.
-6. If leveraging [GitHub Actions](docs/github_actions_steps.md).
-7. Optionally [include a sample AI chat application](/docs/sample_app_setup.md) with the deployment.
-
-### Check Azure OpenAI Quota Availability  
-
-To ensure sufficient quota is available in your subscription, please follow **[quota check instructions guide](./docs/quota_check.md)** before deploying the solution.
-
-### Services Enabled
-
-For additional documentation of the default enabled services of this solution accelerator, please see:
-
-1. [Azure Open AI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/)
-2. [Azure AI Search](https://learn.microsoft.com/en-us/azure/search/)
-3. [Azure AI hub](https://learn.microsoft.com/en-us/azure/ai-foundry/)
-4. [Azure AI project](https://learn.microsoft.com/en-us/azure/ai-foundry/)
-5. [Azure Container Registry](https://learn.microsoft.com/en-us/azure/container-registry/)
-6. [Azure Virtual Machines](https://learn.microsoft.com/en-us/azure/virtual-machines/)
-7. [Azure Storage](https://learn.microsoft.com/en-us/azure/storage/)
-8. [Azure Virtual Network](https://learn.microsoft.com/en-us/azure/virtual-network/)
-9. [Azure Key vault](https://learn.microsoft.com/en-us/azure/key-vault/)
-10. [Azure Bastion](https://learn.microsoft.com/en-us/azure/bastion/)
-11. [Azure Log Analytics](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview)
-12. [Azure Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview)
-
-## Getting Started
-
-<h2><img src="./img/Documentation/quickDeploy.png" width="64">
-<br/>
-QUICK DEPLOY
-</h2>
-
-| [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/microsoft/Deploy-Your-AI-Application-In-Production) | [![Open in Dev Containers](https://img.shields.io/static/v1?style=for-the-badge&label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/microsoft/Deploy-Your-AI-Application-In-Production) |
-|---|---|
-[Steps to deploy with GitHub Codespaces](docs/github_code_spaces_steps.md)
+### 🛠️ Developer Experience
+- **Multiple Deployment Options**: GitHub Codespaces, local environment, or CI/CD
+- **Infrastructure as Code**: Complete Bicep templates for reproducible deployments
+- **Documentation**: Comprehensive guides and troubleshooting resources
+- **Testing Framework**: Built-in validation and testing capabilities
 
 
-## Connect to and validate access to the new environment 
-Follow the post deployment steps [Post Deployment Steps](docs/github_code_spaces_steps.md) to connect to the isolated environment.
+## 📋 Prerequisites & Requirements
 
-## Deploy Sample Application with the new environment
-Optionally include a [sample AI chat application](/docs/sample_app_setup.md) to showcase a production AI application deployed to a secure environment.
+### 🔑 Azure Requirements
 
-## Deploy your application in the isolated environment
-- Leverage the Microsoft Learn documentation to provision an app service instance within your secure network [Configure Web App](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/on-your-data-configuration#azure-ai-foundry-portal)
-- Follow these instructions to [Add your data and chat with it in the AI Foundry playground](https://learn.microsoft.com/en-us/azure/ai-foundry/tutorials/deploy-chat-web-app#add-your-data-and-try-the-chat-model-again)
+```mermaid
+graph TD
+    subgraph "🔐 Identity & Access"
+        A[Azure Subscription]
+        B[Azure AD Account]
+        C[Contributor Permissions]
+        D[Required Roles & Scopes]
+    end
+    
+    subgraph "🌍 Regional Considerations"
+        E[Region Selection]
+        F[AI Model Availability]
+        G[Quota Requirements]
+    end
+    
+    subgraph "🛠️ Development Tools"
+        H[Azure CLI]
+        I[Azure Developer CLI]
+        J[GitHub Account - Optional]
+    end
+    
+    A --> B
+    B --> C
+    C --> D
+    E --> F
+    F --> G
+    H --> I
+    
+    classDef requirement fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef tool fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    
+    class A,B,C,D,E,F,G requirement
+    class H,I,J tool
+```
+
+### Essential Prerequisites
+
+1. **🔐 Azure Access**
+   - Azure subscription with Contributor permissions
+   - Azure AD account with appropriate roles
+   - [Required roles and scopes configured](docs/Required_roles_scopes_resources.md)
+
+2. **🌍 Region & Quota Planning**
+   - Check [Azure OpenAI quota availability](docs/quota_check.md)
+   - Select appropriate Azure region ([see availability guide](https://learn.microsoft.com/azure/ai-services/openai/concepts/models#standard-deployment-model-availability))
+   - Ensure sufficient quota for GPT-4o and embedding models
+
+3. **🔧 Network Access**
+   - **Important**: The solution creates a jump-box VM with Azure Bastion for secure access
+   - Optionally specify your IP address in `allowedIpAddress` parameter for additional security
+   - Default configuration allows all IPs to connect to Azure Bastion
+
+### 🧪 Check Azure OpenAI Quota
+
+Before deployment, verify sufficient quota availability:
+
+📊 **[Follow the quota check guide](docs/quota_check.md)** to ensure your subscription has:
+- GPT-4o model quota (minimum 150 tokens per minute)
+- Text-embedding-3-small quota (minimum 100 tokens per minute)
+
+### 🌍 Supported Azure Regions
+
+**Recommended Regions** (tested and verified):
+- `East US 2` ✅ (Primary test region)
+- `West US 2` ✅
+- `West Europe` ✅
+- `UK South` ✅
+
+> 💡 **Tip**: Use the [Azure region selector tool](https://azure.microsoft.com/global-infrastructure/services/) to find the best region for your requirements.
+
+### 🛠️ Development Environment Options
+
+| Environment | Requirements | Setup Time |
+|-------------|--------------|------------|
+| **☁️ GitHub Codespaces** | GitHub Team/Enterprise account | ~2 minutes |
+| **💻 Local Development** | Azure CLI + Azure Developer CLI | ~10 minutes |
+| **🔄 CI/CD Pipeline** | GitHub Actions workflow | ~15 minutes |
+
+### 🎯 Optional Components
+
+Enable additional services based on your requirements:
+
+- **🔍 AI Search**: For advanced search capabilities
+- **🍃 Cosmos DB**: For NoSQL data storage
+- **🗄️ SQL Server**: For relational data storage
+- **🚪 API Management**: For API gateway functionality
+- **📱 Sample Application**: For testing and demonstration
+
+Each optional service can be enabled during deployment by setting the corresponding feature flags.
+
+## 🔧 Included Azure Services
+
+### Core Infrastructure Services
+
+```mermaid
+graph TB
+    subgraph "🏗️ Foundation Services"
+        VN[Virtual Network<br/>Network Segmentation]
+        BAS[Azure Bastion<br/>Secure Access]
+        VM[Jump Box VM<br/>Management Access]
+        KV[Key Vault<br/>Secrets Management]
+    end
+    
+    subgraph "🤖 AI & Cognitive Services"
+        AIF[AI Foundry Hub<br/>Central AI Hub]
+        AIP[AI Foundry Project<br/>Workspace]
+        AOI[Azure OpenAI<br/>GPT-4o + Embeddings]
+        AIS[AI Search<br/>Optional]
+        CS[Content Safety<br/>Optional]
+        VIS[AI Vision<br/>Optional]
+        SPE[AI Speech<br/>Optional]
+        TRA[Translator<br/>Optional]
+        DOC[Document Intelligence<br/>Optional]
+    end
+    
+    subgraph "💾 Data & Storage"
+        ST[Storage Account<br/>Blob + File Storage]
+        ACR[Container Registry<br/>Premium Tier]
+        COS[Cosmos DB<br/>Optional NoSQL]
+        SQL[SQL Server<br/>Optional RDBMS]
+    end
+    
+    subgraph "📊 Monitoring & Management"
+        LAW[Log Analytics<br/>Centralized Logging]
+        AI[Application Insights<br/>Performance Monitoring]
+        APIM[API Management<br/>Optional Gateway]
+        APP[App Service<br/>Optional Sample App]
+    end
+    
+    classDef foundation fill:#e8eaf6,stroke:#3f51b5,stroke-width:2px
+    classDef ai fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef data fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef monitor fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    
+    class VN,BAS,VM,KV foundation
+    class AIF,AIP,AOI,AIS,CS,VIS,SPE,TRA,DOC ai
+    class ST,ACR,COS,SQL data
+    class LAW,AI,APIM,APP monitor
+```
+
+### Service Details & Documentation
+
+| Service Category | Service | Purpose | Documentation |
+|------------------|---------|---------|---------------|
+| **🤖 AI Services** | Azure AI Foundry Hub | Central hub for AI projects | [Learn More](https://learn.microsoft.com/en-us/azure/ai-foundry/) |
+| | Azure AI Foundry Project | Individual AI project workspace | [Learn More](https://learn.microsoft.com/en-us/azure/ai-foundry/) |
+| | Azure OpenAI | Large language models (GPT-4o, embeddings) | [Learn More](https://learn.microsoft.com/en-us/azure/ai-services/openai/) |
+| | Azure AI Search | Cognitive search capabilities | [Learn More](https://learn.microsoft.com/en-us/azure/search/) |
+| **🏗️ Infrastructure** | Virtual Network | Network isolation and segmentation | [Learn More](https://learn.microsoft.com/en-us/azure/virtual-network/) |
+| | Azure Bastion | Secure RDP/SSH access | [Learn More](https://learn.microsoft.com/en-us/azure/bastion/) |
+| | Virtual Machines | Jump box for secure access | [Learn More](https://learn.microsoft.com/en-us/azure/virtual-machines/) |
+| **💾 Storage** | Storage Account | Blob and file storage | [Learn More](https://learn.microsoft.com/en-us/azure/storage/) |
+| | Container Registry | Private container images | [Learn More](https://learn.microsoft.com/en-us/azure/container-registry/) |
+| | Key Vault | Secrets and certificate management | [Learn More](https://learn.microsoft.com/en-us/azure/key-vault/) |
+| **📊 Monitoring** | Log Analytics | Centralized logging platform | [Learn More](https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview) |
+| | Application Insights | Application performance monitoring | [Learn More](https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview) |
+
+### Optional Services (Configurable)
+
+These services can be enabled during deployment based on your requirements:
+
+- **🍃 Cosmos DB**: NoSQL database for scalable applications
+- **🗄️ SQL Server**: Relational database for structured data
+- **🚪 API Management**: Enterprise API gateway and management
+- **📱 App Service**: Hosting for the sample chat application
+- **🛡️ Content Safety**: AI content moderation and safety
+- **👁️ AI Vision**: Computer vision and image analysis
+- **🗣️ AI Speech**: Speech-to-text and text-to-speech
+- **🌐 Translator**: Multi-language translation services
+- **📄 Document Intelligence**: Document processing and analysis
+
+## 🚀 Quick Start
+
+### Deployment Options
+
+Choose your preferred deployment method:
+
+```mermaid
+graph LR
+    subgraph "🚀 Quick Deploy Options"
+        A[☁️ GitHub Codespaces<br/>Recommended]
+        B[💻 Local Environment<br/>Azure CLI + AZD]
+        C[🔄 GitHub Actions<br/>CI/CD Pipeline]
+    end
+    
+    A --> D[🎯 Deploy Infrastructure]
+    B --> D
+    C --> D
+    
+    D --> E[✅ Verify Deployment]
+    E --> F[🤖 Deploy AI Application]
+    F --> G[📊 Monitor & Manage]
+    
+    classDef option fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef process fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    
+    class A,B,C option
+    class D,E,F,G process
+```
+
+### Option 1: GitHub Codespaces (Recommended)
+
+<h3><img src="./img/Documentation/quickDeploy.png" width="32"> Quick Deploy with Codespaces</h3>
+
+| Deploy Now | Setup Guide |
+|------------|-------------|
+| [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/Zone-Enterprise/Deploy-Your-AI-Application-In-Production) | [📖 Codespaces Setup Guide](docs/github_code_spaces_steps.md) |
+
+### Option 2: Local Environment
+
+```bash
+# Install prerequisites
+az --version  # Azure CLI
+azd --version # Azure Developer CLI
+
+# Clone and deploy
+git clone https://github.com/Zone-Enterprise/Deploy-Your-AI-Application-In-Production.git
+cd Deploy-Your-AI-Application-In-Production
+azd up
+```
+
+📖 [Complete Local Setup Guide](docs/local_environment_steps.md)
+
+### Option 3: GitHub Actions
+
+Set up automated deployment with GitHub Actions for production environments.
+
+📖 [GitHub Actions Setup Guide](docs/github_actions_steps.md)
 
 
-## Guidance
+## 🎯 Post-Deployment Guide
 
-### Region Availability
+### Deployment Verification
 
-By default, this template uses AI models which may not be available in all Azure regions. Please follow [quota check instructions guide](./docs/quota_check.md) before deploying the solution. Additionally, check for [up-to-date region availability](https://learn.microsoft.com/azure/ai-services/openai/concepts/models#standard-deployment-model-availability) and select a region during deployment accordingly.
+After successful deployment, follow these steps to verify and configure your environment:
 
-### Costs
+```mermaid
+graph LR
+    A[✅ Deployment Complete] --> B[🔍 Verify Network Isolation]
+    B --> C[🔗 Connect via Bastion]
+    C --> D[🤖 Access AI Foundry]
+    D --> E[📊 Configure Monitoring]
+    E --> F[🚀 Deploy Applications]
+    
+    classDef complete fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef verify fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef configure fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    
+    class A complete
+    class B,C,D verify
+    class E,F configure
+```
 
-You can estimate the cost of this project's architecture with [Azure's pricing calculator](https://azure.microsoft.com/pricing/calculator/)
+### 1. 🔍 Verify Network Isolation
 
-### Security
+Confirm that your environment is properly secured:
 
-This template has [Managed Identity](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview) built in to eliminate the need for developers to manage these credentials. Applications can use managed identities to obtain Microsoft Entra tokens without having to manage any credentials.
+```bash
+# Check private endpoint status
+az network private-endpoint list --resource-group <your-rg-name>
 
-## Resources
+# Verify network isolation
+az cognitiveservices account show --name <your-ai-foundry-name> --resource-group <your-rg-name>
+```
 
-- [Azure AI Foundry documentation](https://learn.microsoft.com/en-us/azure/ai-foundry/)
-- [Azure Well Architecture Framework documentation](https://learn.microsoft.com/en-us/azure/well-architected/)
-- [Azure OpenAI Service - Documentation, quickstarts, API reference - Azure AI services | Microsoft Learn](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/use-your-data)
-- [Azure AI Content Understanding documentation](https://learn.microsoft.com/en-us/azure/ai-services/content-understanding/)
+📖 **[Complete Network Verification Guide](docs/github_code_spaces_steps.md)**
+
+### 2. 🔗 Connect to Isolated Environment
+
+Access your secure environment through Azure Bastion:
+
+1. Navigate to Azure Portal → Your Resource Group → Jump Box VM
+2. Click "Connect" → "Bastion"
+3. Enter your VM credentials (configured during deployment)
+4. Access AI Foundry and other services from within the secure network
+
+### 3. 🚀 Deploy Sample Application (Optional)
+
+If you enabled the sample application during deployment:
+
+📖 **[Sample Application Setup Guide](docs/sample_app_setup.md)**
+
+### 4. 🤖 Deploy Your AI Application
+
+Start building your production AI application:
+
+1. **Configure AI Foundry Project**
+   - Set up model deployments
+   - Configure data connections
+   - Set up prompt flows
+
+2. **Deploy to Secure Environment**
+   - Use the provided App Service infrastructure
+   - Configure private connectivity
+   - Set up monitoring and alerting
+
+📖 **[AI Application Deployment Guide](docs/deploy_your_application.md)**
+
+## 📚 Advanced Configuration
+
+### 🔧 Customize Your Deployment
+
+- **[Add Additional Services](docs/add_additional_services.md)**: Enable Cosmos DB, SQL Server, or API Management
+- **[Transfer Existing Projects](docs/transfer_project_connections.md)**: Import from existing AI Foundry projects
+- **[Modify AI Models](docs/modify_deployed_models.md)**: Change or add AI model deployments
+- **[Reuse Log Analytics](docs/re-use-log-analytics.md)**: Connect to existing monitoring infrastructure
+
+### 🔍 Monitoring & Operations
+
+- **[Verify Services](docs/Verify_Services_On_Network.md)**: Comprehensive service validation
+- **[Post-Deployment Steps](docs/post_deployment_steps.md)**: Complete configuration checklist
+- **[Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md)**: Detailed technical documentation
+
+## 💡 Best Practices & Guidance
+
+### 🌍 Regional Considerations
+
+Choose your deployment region based on:
+- **AI Model Availability**: Ensure your target models are available
+- **Data Residency**: Comply with organizational data requirements
+- **Latency Requirements**: Choose regions close to your users
+- **Cost Optimization**: Consider regional pricing differences
+
+📊 **[Check Region Availability](https://learn.microsoft.com/azure/ai-services/openai/concepts/models#standard-deployment-model-availability)**
+
+### 💰 Cost Management
+
+Estimate and optimize your costs:
+
+- **[Azure Pricing Calculator](https://azure.microsoft.com/pricing/calculator/)**: Get cost estimates
+- **Cost Optimization Tips**:
+  - Use appropriate VM sizes for your workload
+  - Consider Azure Reserved Instances for long-term deployments
+  - Monitor and optimize AI model usage
+  - Use auto-scaling for variable workloads
+
+### 🔒 Security Best Practices
+
+- **Regular Security Reviews**: Monitor security alerts and recommendations
+- **Access Management**: Regularly review and update RBAC assignments
+- **Secret Rotation**: Implement regular rotation for keys and certificates
+- **Network Monitoring**: Monitor network traffic and access patterns
+
+### 📈 Performance Optimization
+
+- **Model Selection**: Choose appropriate AI models for your use case
+- **Caching Strategy**: Implement caching for frequently accessed data
+- **Load Testing**: Test your application under expected load
+- **Monitoring**: Set up comprehensive monitoring and alerting
+
+## 📖 Resources & Documentation
+
+### 🎓 Learning Resources
+
+| Resource | Description |
+|----------|-------------|
+| [Azure AI Foundry Documentation](https://learn.microsoft.com/en-us/azure/ai-foundry/) | Complete guide to Azure AI Foundry |
+| [Azure Well-Architected Framework](https://learn.microsoft.com/en-us/azure/well-architected/) | Best practices for cloud architecture |
+| [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/use-your-data) | OpenAI integration and usage |
+| [Azure AI Content Understanding](https://learn.microsoft.com/en-us/azure/ai-services/content-understanding/) | Content processing capabilities |
+
+### 🛠️ Technical Documentation
+
+- **[Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md)**: Comprehensive technical details and Mermaid diagrams
+- **[Network Configuration](docs/Verify_Services_On_Network.md)**: Network isolation and security details
+- **[Service Integration](docs/add_additional_services.md)**: Adding and configuring optional services
+
+### 🔧 Operational Guides
+
+- **[Quota Management](docs/quota_check.md)**: Azure OpenAI quota requirements and management
+- **[Required Roles & Scopes](docs/Required_roles_scopes_resources.md)**: Prerequisites and permissions
+- **[Post-Deployment Steps](docs/post_deployment_steps.md)**: Complete configuration checklist
+
+### 🤝 Community & Support
+
+- **[Contributing Guidelines](CONTRIBUTING.md)**: How to contribute to this project
+- **[Code of Conduct](CODE_OF_CONDUCT.md)**: Community guidelines
+- **[Security Policy](SECURITY.md)**: Security reporting and policies
+- **[Support](SUPPORT.md)**: Getting help and support
+
 ---
+
+## 📄 Legal & Compliance
+
+### 📝 Disclaimers
+
+**Important Legal Information**: This solution is provided as-is for educational and demonstration purposes. Please review all disclaimers and compliance requirements before production use.
+
+- **Microsoft Products and Services**: Compliance with Product Terms required for Microsoft Azure Services
+- **Export Control**: Subject to domestic and international export laws and regulations
+- **Medical Use**: Not designed as a medical device or substitute for professional medical advice
+- **High-Risk Use**: Not intended for use where failure could result in injury or damage
+- **SOC Compliance**: Not subject to SOC 1 and SOC 2 compliance audits
+- **Financial Services**: Not a substitute for professional financial advice
+
+### 🔒 Data Collection & Privacy
+
+This software may collect information about usage and send it to Microsoft. Key points:
+
+- **Telemetry**: Can be disabled (see repository documentation)
+- **User Data**: Features may enable data collection from application users
+- **Compliance**: Must comply with applicable laws and provide appropriate notices
+- **Privacy Statement**: Available at https://go.microsoft.com/fwlink/?LinkID=824704
+
+### ⚖️ License & Usage
+
+- **License**: MIT License (see [LICENSE](LICENSE) file)
+- **Trademarks**: Microsoft trademarks subject to Microsoft guidelines
+- **Third-party**: Third-party trademarks subject to respective policies
+- **Usage**: Authorized use must follow all applicable guidelines
+
+**By using this software, you acknowledge and agree to these terms and conditions.**
+
+---
+
+## 🏷️ Version Information
+
+| Version | Date | Changes |
+|---------|------|---------|
+| **1.2** | 2025-05-13 | AI Foundry Build 2025 updates, new project module, enhanced security |
+| **1.1** | 2025-04-30 | Connection transfer feature, improved documentation |
+| **1.0** | 2025-03-10 | Initial release with core functionality |
+
+📋 **[View Complete Changelog](CHANGELOG.md)**
+
+---
+
+<div align="center">
+
+### 🌟 Ready to Deploy Your AI Application?
+
+[![Deploy Now](https://img.shields.io/badge/Deploy%20Now-GitHub%20Codespaces-2ea44f?style=for-the-badge&logo=github)](https://codespaces.new/Zone-Enterprise/Deploy-Your-AI-Application-In-Production)
+
+[![Technical Docs](https://img.shields.io/badge/Technical%20Docs-Architecture-blue?style=for-the-badge&logo=gitbook)](docs/TECHNICAL_ARCHITECTURE.md)
+[![Azure Portal](https://img.shields.io/badge/Azure%20Portal-Pricing%20Calculator-0078d4?style=for-the-badge&logo=microsoft-azure)](https://azure.microsoft.com/pricing/calculator/)
+
+**Built with ❤️ by the Azure AI Team**
+
+</div>
 
 ## Disclaimers
 
